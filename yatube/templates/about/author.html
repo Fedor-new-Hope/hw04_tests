@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Об авторе проекта{% endblock %}
+{% block content %}
+<h2>Привет, я автор, меня зовут Кулабухов Федор.</h2>
+<ul>
+<li> 
+ <a href="https://github.com/Fedor-new-Hope">GitHub</a>
+</li>
+<li>
+ <a href="https://vk.com/id11507817 ">VK.com</a>
+</li>
+</ul>
+
+<p>
+  <h5>Немного вдохновляющих цитат :</h5>
+</p>
+<p>    
+  <em> "Я не вошебник я только учусь..."</em>  Е.Шварц
+</p>
+<p>
+  <em> "Дорогу осилит идущий..."  </em> народная мудрость
+</p>
+<p>
+  <em> " - А я смогу<br> - А он такой<br> - А я упрямый<br> - Он такой<br> - Я труфальдино из Бергамо, я такой<br> - Он Труфальдино из Бергамо "</em>  к.ф Труфальдино из Бергамо.   
+</p>
+<p>
+  <h5>Мое рабочее окружение :</h5>
+<p>  
+<img src= "{% static 'img/table.jpg' %}" alt="Рабочий стол" width="600" height="450"/>
+<img src= "{% static 'img/windowsill.jpg' %}" alt="Трибуна потдержки" width="600" height="450"                                      />
+
+{% endblock %} 
