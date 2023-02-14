@@ -1,24 +1,29 @@
-from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from ..models import Group, Post
+from ..models import Group, Post, User
 
-User = get_user_model()
+from posts.tests.constants import (
+    AUTHOR_USERNAME,
+    GROUP_TITLE,
+    GROUP_SLUG,
+    GROUP_DESCRIPTION,
+    POST_TEXT,
+)
 
 
 class PostModelTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user = User.objects.create_user(username='auth')
+        cls.user = User.objects.create_user(username=AUTHOR_USERNAME)
         cls.group = Group.objects.create(
-            title='Тестовая группа',
-            slug='Тестовый слаг',
-            description='Тестовое описание',
+            title=GROUP_TITLE,
+            slug=GROUP_SLUG,
+            description=GROUP_DESCRIPTION,
         )
         cls.post = Post.objects.create(
             author=cls.user,
-            text='Тестовый пост',
+            text=POST_TEXT,
         )
 
     def test_models_have_correct_object_names(self):
@@ -33,3 +38,14 @@ class PostModelTest(TestCase):
           правильно ли отображается значение поля """
         title_group = PostModelTest.group
         self.assertEqual(str(title_group), title_group.title)
+
+    def test_models_post_have_correct_verbose_name(self):
+        post = PostModelTest.post
+        correct_verbose_name = post._meta.get_field('author').verbose_name
+        self.assertEqual(correct_verbose_name, 'Автор поста')
+
+    def test_models_post_have_correct_help_text(self):
+        post = PostModelTest.post
+        correct_help_text = post._meta.get_field('group').help_text
+        self.assertEqual(
+            correct_help_text, 'Группа, к которой будет относиться пост')

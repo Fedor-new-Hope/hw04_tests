@@ -1,9 +1,21 @@
 from http import HTTPStatus
+
 from django.test import Client, TestCase
 from django.urls import reverse
 
 from posts.models import Group, Post, User
 from posts.forms import PostForm
+
+from posts.tests.constants import (
+    PROFILE_URL_NAME,
+    POST_CREATE_URL_NAME,
+    POST_EDIT_URL_NAME,
+    AUTHOR_USERNAME,
+    GROUP_TITLE,
+    GROUP_SLUG,
+    GROUP_DESCRIPTION,
+    POST_TEXT,
+)
 
 
 class PostCreateFormTests(TestCase):
@@ -11,16 +23,16 @@ class PostCreateFormTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.guest_client = Client()
-        cls.user = User.objects.create_user(username='Nikolo')
+        cls.user = User.objects.create_user(username=AUTHOR_USERNAME)
         cls.authorized_client = Client()
         cls.authorized_client.force_login(cls.user)
         cls.group = Group.objects.create(
-            title='Тестовая группа',
-            slug='test-slug',
-            description='Тестовое описание'
+            title=GROUP_TITLE,
+            slug=GROUP_SLUG,
+            description=GROUP_DESCRIPTION
         )
         cls.post = Post.objects.create(
-            text='Тестовый пост',
+            text=POST_TEXT,
             author=cls.user,
             group=cls.group
         )
@@ -30,51 +42,45 @@ class PostCreateFormTests(TestCase):
         """Валидная форма создает запись"""
         posts_count = Post.objects.count()
         form_data = {
-            'text': 'Тестовый текст',
+            'text': POST_TEXT,
             'group': self.group.pk,
         }
         response = self.authorized_client.post(
-            reverse('posts:post_create'),
+            reverse(POST_CREATE_URL_NAME),
             data=form_data,
             follow=True
         )
         self.assertRedirects(response, reverse(
-            'posts:profile', kwargs={'username': PostCreateFormTests.user})
+            PROFILE_URL_NAME, kwargs={'username': PostCreateFormTests.user})
         )
         self.assertEqual(Post.objects.count(), posts_count + 1)
+        # Антон, не знаю как лучше сделать, написал два варианта.
+        # Вариант 1
         self.assertTrue(
-            Post.objects.filter(
-                group=PostCreateFormTests.group,
-                author=PostCreateFormTests.user,
-                text='Тестовый текст'
-            ).exists()
-        )
+            Post.objects.filter(group=PostCreateFormTests.group).exists())
+        self.assertTrue(
+            Post.objects.filter(author=PostCreateFormTests.user).exists())
+        self.assertTrue(Post.objects.filter(text=POST_TEXT).exists())
+        # Вариант 2
+        self.assertTrue(self.post.text == POST_TEXT)
+        self.assertTrue(self.post.author == PostCreateFormTests.user)
+        self.assertTrue(self.post.group == PostCreateFormTests.group)
 
     def test_authorized_edit_post(self):
         """Редактирование записи создателем поста"""
         form_data = {
-            'text': 'Тестовый текст',
-            'group': self.group.pk,
-        }
-        self.authorized_client.post(
-            reverse('posts:post_create'),
-            data=form_data,
-            follow=True,
-        )
-        post_edit = Post.objects.get(pk=self.group.pk)
-        self.client.get(f'/posts/{post_edit.pk}/edit/')
-        form_data = {
-            'text': 'Измененный пост',
+            'text': POST_TEXT,
             'group': self.group.pk
         }
-        response_edit = self.authorized_client.post(
-            reverse('posts:post_edit',
-                    kwargs={
-                        'post_id': post_edit.pk
-                    }),
+        response = self.authorized_client.post(reverse(
+            POST_EDIT_URL_NAME,
+            kwargs={
+                'post_id': self.post.pk
+            }),
             data=form_data,
             follow=True,
         )
         post_edit = Post.objects.get(pk=self.group.pk)
-        self.assertEqual(response_edit.status_code, HTTPStatus.OK)
-        self.assertEqual(post_edit.text, 'Измененный пост')
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(post_edit.text, form_data['text'])
+        self.assertEqual(post_edit.group.id, form_data['group'])
