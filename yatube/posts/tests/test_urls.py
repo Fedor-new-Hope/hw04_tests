@@ -1,40 +1,7 @@
-# Доброго времени суток, Антон, не стал писать в пачке в столь поздний час,
-# доделал и решил сюда написать перед отправкой.
-# У меня вопрос по замечаниям к этому файлу 9 строка.
-#
-"""В файле должны быть тесты:
- Страницы доступны и работают:
- 1. главная страница /,
- 2. страница группы /group/<slug>/,
- 3. страница создания поста /new/:
-                                     (- почему ? ведь в проекте  /create/)
- a) доступа только зарегистрированным пользователям;
- 4. профайла пользователя /<username>/;
-                                      (/profile/<username>/ в теории так)
- 5. отдельного поста /<username>/<post_id>/;
-                                                 (/posts/<post_id>/и так)
-    (- почему только зарегистрированным ?
-      в проекте и исходя и логики эти страницы должны быть доступны всем)
-
- Для следующих страниц вызываются ожидаемые шаблоны,
- при обращении к ним по URL:
- 1. главная страница /,
- 2. страница группы /group/<slug>/,
- 3. страница создания поста /new/                   ( в проекте  /create/)
- Для страницы редактирования поста /<username>/<post_id>/edit/ для:
-                                    (/posts/<post_id>/edit/ в теории так)
- 1. у анонимного пользователя должен проверяться редирект.
- 2. у авторизованного пользователя, автора поста нужно проверить какой
-   вызывается шаблон.
- 3. у авторизованного пользователя — не автора поста должен проверяться
-   редирект."""
-#
-# Если делать согласно замечаниям то теты будут падать,
-#                        соответственно надо переписывать отсальной код.
-# Поправил исходя из разумных соображений))
 from http import HTTPStatus
 
 from django.test import TestCase, Client
+from django.urls import reverse
 
 from ..models import Post, Group, User
 
@@ -50,6 +17,10 @@ from posts.tests.constants import (
     PROFILE_TEMPLATE,
     POST_DETAIL_TEMPLATE,
     CREATE_POST_TEMPLATE,
+    INDEX_URL_NAME,
+    GROUP_LIST_URL_NAME,
+    PROFILE_URL_NAME,
+    POST_DETAIL_URL_NAME,
 )
 
 
@@ -76,10 +47,16 @@ class StaticURLTests(TestCase):
         self.authorized_client.force_login(self.user)
         self.authorized_client_2.force_login(self.user_2)
         self.url_names_all_user = [
-            '/',
-            f'/group/{self.group.slug}/',
-            f'/profile/{self.user}/',
-            f'/posts/{self.post.id}/',
+            reverse(INDEX_URL_NAME),
+            reverse(
+                GROUP_LIST_URL_NAME,
+                kwargs={'slug': self.group.slug}),
+            reverse(
+                PROFILE_URL_NAME,
+                kwargs={'username': self.post.author}),
+            reverse(
+                POST_DETAIL_URL_NAME,
+                kwargs={'post_id': self.post.id}),
         ]
 
         self.url_names_not_found = [

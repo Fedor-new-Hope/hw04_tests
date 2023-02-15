@@ -54,17 +54,9 @@ class PostCreateFormTests(TestCase):
             PROFILE_URL_NAME, kwargs={'username': PostCreateFormTests.user})
         )
         self.assertEqual(Post.objects.count(), posts_count + 1)
-        # Антон, не знаю как лучше сделать, написал два варианта.
-        # Вариант 1
-        self.assertTrue(
-            Post.objects.filter(group=PostCreateFormTests.group).exists())
-        self.assertTrue(
-            Post.objects.filter(author=PostCreateFormTests.user).exists())
-        self.assertTrue(Post.objects.filter(text=POST_TEXT).exists())
-        # Вариант 2
-        self.assertTrue(self.post.text == POST_TEXT)
-        self.assertTrue(self.post.author == PostCreateFormTests.user)
-        self.assertTrue(self.post.group == PostCreateFormTests.group)
+        self.assertEqual(self.post.text, form_data['text'])
+        self.assertEqual(self.post.author, PostCreateFormTests.user)
+        self.assertEqual(self.post.group.pk, form_data['group'])
 
     def test_authorized_edit_post(self):
         """Редактирование записи создателем поста"""
